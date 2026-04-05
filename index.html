@@ -541,11 +541,13 @@ function load() {
 // ═══════════════════════════════════════════════════
 function cleanText(str) {
   return String(str)
-    .replace(/\u2014/g, '--')   // em dash
-    .replace(/\u2013/g, '-')    // en dash
-    .replace(/\u2018|\u2019/g, "'") // smart quotes
-    .replace(/\u201c|\u201d/g, '"') // smart double quotes
-    .replace(/[\u0080-\uFFFF]/g, '') // strip other non-ASCII
+    .replace(/\u2014/g, '--')
+    .replace(/\u2013/g, '-')
+    .replace(/\u2018|\u2019/g, "'")
+    .replace(/\u201c|\u201d/g, '"')
+    .replace(/[\u0080-\uFFFF]/g, '')
+    .replace(/[\r\n\t]/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
