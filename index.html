@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>iThoughts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:         #0b0b0b;
+    --surface:    #161616;
+    --surface2:   #1e1e1e;
+    --border:     #282828;
+    --amber:      #f0a500;
+    --amber-dim:  rgba(240,165,0,0.12);
+    --text:       #e2e2e2;
+    --text-muted: #5a5a5a;
+    --text-dim:   #888;
+    --ai-text:    #bfbfbf;
+    --danger:     #e05555;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ─────────────────────────────────────── */
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+    color: var(--amber);
+    flex-shrink: 0;
+  }
+  .logo span { color: var(--text-dim); font-weight: 400; }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ── MODE TOGGLE ─────────────────────────────────── */
+  .mode-wrap {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .mode-lbl {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    transition: color 0.2s;
+  }
+  .mode-lbl.on { color: var(--amber); }
+
+  .track {
+    width: 34px; height: 18px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    position: relative;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .track.live { background: var(--amber-dim); border-color: var(--amber); }
+
+  .thumb {
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 12px; height: 12px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .track.live .thumb { transform: translateX(16px); background: var(--amber); }
+
+  /* ── HEADER BTNS ─────────────────────────────────── */
+  .hbtn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .hbtn:hover { border-color: var(--amber); color: var(--amber); }
+  .hbtn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* ── FEED ────────────────────────────────────────── */
+  .feed {
+    position: fixed;
+    top: 53px;
+    bottom: 72px;
+    left: 0; right: 0;
+    overflow-y: auto;
+    padding: 16px 16px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .feed-spacer { flex: 1 0 auto; min-height: 8px; }
+
+  /* ── EMPTY STATE ─────────────────────────────────── */
+  .empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    pointer-events: none;
+  }
+  .empty-icon { font-size: 36px; opacity: 0.2; }
+  .empty-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-muted);
+    opacity: 0.6;
+  }
+  .empty-hint { font-size: 12px; color: var(--text-muted); opacity: 0.4; }
+
+  /* ── PILL CARD ───────────────────────────────────── */
+  .pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    animation: fade-up 0.22s ease-out;
+  }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .pill-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .pill-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--amber);
+  }
+
+  .pill-time {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .pill-body {
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.55;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  /* ── AI RESPONSE ─────────────────────────────────── */
+  .ai-block {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .ai-label {
+    display: block;
+    font-family: 'Syne', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 5px;
+  }
+
+  .ai-text {
+    color: var(--ai-text);
+    font-size: 12px;
+    font-style: italic;
+    line-height: 1.55;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  /* ── LOADING DOTS ────────────────────────────────── */
+  .dots {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .dot {
+    width: 5px; height: 5px;
+    background: var(--amber);
+    border-radius: 50%;
+    animation: blink 1.1s ease-in-out infinite;
+    opacity: 0.3;
+  }
+  .dot:nth-child(2) { animation-delay: 0.18s; }
+  .dot:nth-child(3) { animation-delay: 0.36s; }
+  @keyframes blink {
+    0%,100% { opacity: 0.2; transform: scale(0.8); }
+    50%      { opacity: 1;   transform: scale(1.1); }
+  }
+
+  /* ── BRICK CARD ──────────────────────────────────── */
+  .brick {
+    background: var(--surface2);
+    border: 1px solid var(--amber);
+    border-radius: 10px;
+    padding: 14px 16px;
+    animation: fade-up 0.3s ease-out;
+  }
+
+  .brick-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .brick-lbl {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--amber);
+  }
+
+  .brick-body {
+    color: var(--ai-text);
+    font-size: 13px;
+    line-height: 1.6;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  /* ── INPUT BAR ───────────────────────────────────── */
+  .input-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    padding: 10px 14px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .pill-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 13px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    line-height: 1.4;
+    resize: none;
+    min-height: 42px;
+    max-height: 110px;
+    overflow-y: auto;
+    outline: none;
+    transition: border-color 0.2s;
+    display: block;
+  }
+  .pill-input:focus { border-color: var(--amber); }
+  .pill-input::placeholder { color: var(--text-muted); }
+
+  .ibtn {
+    border-radius: 10px;
+    width: 42px; height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 17px;
+    transition: all 0.15s;
+    border: none;
+  }
+
+  .drop-btn {
+    background: var(--amber);
+    color: #000;
+  }
+  .drop-btn:hover { background: #ffb820; }
+  .drop-btn:active { transform: scale(0.94); }
+  .drop-btn:disabled { opacity: 0.35; cursor: default; }
+
+  .refresh-btn {
+    background: none;
+    border: 1px solid var(--border) !important;
+    color: var(--text-dim);
+    border: none;
+  }
+  .refresh-btn:hover { border-color: var(--amber) !important; color: var(--amber); }
+  .refresh-btn:disabled { opacity: 0.35; cursor: default; }
+  .refresh-btn.hidden { display: none; }
+
+  /* ── SCROLLBAR ───────────────────────────────────── */
+  .feed::-webkit-scrollbar { width: 2px; }
+  .feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── ICARD OVERLAY ───────────────────────────────── */
+  .icard-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: #0a0a0f;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.35s ease;
+  }
+  .icard-overlay.open { transform: translateY(0); }
+
+  .icard-close {
+    position: absolute;
+    top: 12px; right: 14px;
+    z-index: 310;
+    background: rgba(255,255,255,0.08);
+    border: none;
+    color: #fff;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .icard-progress { display: flex; gap: 4px; padding: 12px 50px 8px 16px; background: linear-gradient(to bottom,rgba(0,0,0,0.9),transparent); position: absolute; top:0; left:0; right:0; z-index: 305; }
+  .icard-seg { flex:1; height:3px; background:rgba(255,255,255,0.2); border-radius:2px; transition: background 0.2s; }
+  .icard-seg.viewed { background:rgba(255,255,255,0.6); }
+  .icard-seg.active { background:#7c3aed; }
+
+  .icard-cards { flex:1; position:relative; overflow:hidden; }
+  .icard-card { position:absolute; inset:0; display:flex; flex-direction:column; opacity:0; transform:translateX(100%); transition:all 0.3s ease; pointer-events:none; }
+  .icard-card.active { opacity:1; transform:translateX(0); pointer-events:all; }
+  .icard-card.prev { opacity:0; transform:translateX(-100%); }
+
+  .icard-hero { padding:52px 20px 20px; min-height:38%; display:flex; flex-direction:column; justify-content:flex-end; }
+  .ih-default { background:linear-gradient(135deg,#1e293b,#0f172a); }
+  .ih-purple  { background:linear-gradient(135deg,#4c1d95,#1e1b4b); }
+  .ih-cyan    { background:linear-gradient(135deg,#164e63,#0c4a6e); }
+  .ih-amber   { background:linear-gradient(135deg,#78350f,#431407); }
+  .ih-green   { background:linear-gradient(135deg,#14532d,#052e16); }
+
+  .icard-tag { font-size:10px; font-weight:700; letter-spacing:0.15em; color:#9090b0; text-transform:uppercase; margin-bottom:8px; }
+  .it-purple { color:#a78bfa; } .it-cyan { color:#67e8f9; } .it-amber { color:#fcd34d; } .it-green { color:#6ee7b7; }
+  .icard-headline { font-size:clamp(20px,5vw,26px); font-weight:700; line-height:1.25; color:#fff; }
+  .ih-default em { color:#cbd5e1; font-style:normal; }
+  .ih-purple  em { color:#a78bfa; font-style:normal; }
+  .ih-cyan    em { color:#67e8f9; font-style:normal; }
+  .ih-amber   em { color:#fcd34d; font-style:normal; }
+  .ih-green   em { color:#6ee7b7; font-style:normal; }
+
+  .icard-body { flex:1; background:#12121a; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:14px; border-top:1px solid rgba(255,255,255,0.06); }
+  .icard-summary { font-size:15px; color:#fff; line-height:1.65; }
+  .icard-ibtns { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+  .icard-ibtn { display:inline-flex; align-items:center; gap:6px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); color:#f59e0b; padding:7px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .icard-ibtn .ico { font-size:11px; background:#f59e0b; color:#000; border-radius:50%; width:16px; height:16px; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0; }
+
+  .icard-nav { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#0a0a0f; border-top:1px solid rgba(255,255,255,0.06); }
+  .icard-nbtn { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; padding:10px 20px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
+  .icard-nbtn:disabled { opacity:0.25; cursor:default; }
+  .icard-ctr { font-size:12px; color:#9090b0; }
+
+  .icard-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:400; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+  .icard-modal-overlay.open { opacity:1; pointer-events:all; }
+  .icard-modal-sheet { position:fixed; bottom:0; left:50%; transform:translateX(-50%) translateY(100%); width:100%; max-width:430px; background:#1e1e2e; border-radius:20px 20px 0 0; padding:24px 20px 36px; z-index:401; transition:transform 0.3s ease; }
+  .icard-modal-overlay.open .icard-modal-sheet { transform:translateX(-50%) translateY(0); }
+  .icard-modal-handle { width:36px; height:4px; background:rgba(255,255,255,0.2); border-radius:2px; margin:0 auto 20px; }
+  .icard-modal-type { font-size:10px; font-weight:700; letter-spacing:0.12em; color:#06b6d4; text-transform:uppercase; margin-bottom:6px; }
+  .icard-modal-term { font-size:18px; font-weight:700; margin-bottom:12px; color:#fff; }
+  .icard-modal-text { font-size:14px; color:#9090b0; line-height:1.7; }
+  .icard-modal-close { margin-top:20px; width:100%; padding:12px; background:rgba(255,255,255,0.06); border:none; color:#fff; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; }
+
+  /* Generate iCard button on brick */
+  .gen-icard-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 12px;
+    padding: 11px 16px;
+    background: var(--amber);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+  }
+  .gen-icard-btn:hover { background: #ffb820; }
+  .gen-icard-btn:active { transform: scale(0.97); }
+  .gen-icard-btn:disabled { opacity: 0.4; cursor: default; }
+
+  .icard-generating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 0;
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--amber);
+  }
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">i<span>thoughts</span></div>
+  <div class="header-right">
+
+    <!-- Mode toggle: silent ●○ live -->
+    <div class="mode-wrap" id="modeWrap" title="Toggle Live / Silent mode">
+      <span class="mode-lbl" id="lblSilent">silent</span>
+      <div class="track" id="track">
+        <div class="thumb" id="thumb"></div>
+      </div>
+      <span class="mode-lbl on" id="lblLive">live</span>
+    </div>
+
+    <button class="hbtn" id="exportBtn">↓ export</button>
+    <button class="hbtn danger" id="clearBtn">clear</button>
+
+  </div>
+</header>
+
+<!-- FEED -->
+<div class="feed" id="feed">
+  <div class="feed-spacer"></div>
+  <!-- pills render here -->
+</div>
+
+<!-- EMPTY STATE (shown when no pills) -->
+<div class="empty" id="empty">
+  <div class="empty-icon">💊</div>
+  <div class="empty-title">drop a thought</div>
+  <div class="empty-hint">type anything · let it land</div>
+</div>
+
+<!-- INPUT BAR -->
+<div class="input-bar">
+  <textarea class="pill-input" id="pillInput" placeholder="drop a thought..." rows="1"></textarea>
+  <button class="ibtn refresh-btn hidden" id="refreshBtn" title="Synthesise all pills into a brick">⚙️</button>
+  <button class="ibtn drop-btn" id="dropBtn">💊</button>
+</div>
+
+
+<script>
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+let pills      = [];   // { id, text, response, loading, isBrick, timestamp }
+let isLive     = true;
+let isBusy     = false;
+
+// ═══════════════════════════════════════════════════
+//  PERSISTENCE
+// ═══════════════════════════════════════════════════
+function save() {
+  try {
+    localStorage.setItem('iT_pills', JSON.stringify(pills));
+    localStorage.setItem('iT_mode',  isLive ? 'live' : 'silent');
+  } catch(e) {}
+}
+
+function load() {
+  try {
+    const p = localStorage.getItem('iT_pills');
+    const m = localStorage.getItem('iT_mode');
+    if (p) pills  = JSON.parse(p);
+    if (m) isLive = m === 'live';
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════
+//  CLAUDE API
+// ═══════════════════════════════════════════════════
+function cleanText(str) {
+  return String(str)
+    .replace(/\u2014/g, '--')   // em dash
+    .replace(/\u2013/g, '-')    // en dash
+    .replace(/\u2018|\u2019/g, "'") // smart quotes
+    .replace(/\u201c|\u201d/g, '"') // smart double quotes
+    .replace(/[\u0080-\uFFFF]/g, '') // strip other non-ASCII
+    .trim();
+}
+
+async function callClaude(system, userMsg) {
+  const res = await fetch('https://hook.eu2.make.com/0yjcgduomfg8wotc7v2qi2rycmao7brt', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt: cleanText(userMsg) })
+  });
+  if (!res.ok) throw new Error('API ' + res.status);
+  const data = await res.json();
+  return data.content[0].text;
+}
+
+const SYSTEM_SHARPEN = `You are a sharp thinking partner. The user drops a raw thought. Reflect it back in 1–2 sentences — crisper, clearer, cut to the bone. No preamble. No "I think" or "it seems". Just the sharpened thought. If it's a question, sharpen the question. If it's an insight, name it precisely.`;
+
+const SYSTEM_SYNTH   = `You are a thinking partner. The user has dropped several raw thoughts. Synthesise them into a single clear "brick" — the most important insight these thoughts are circling. Lead with the sharpest version of the core idea. Follow with 1–2 supporting observations. Keep it to 3–5 sentences total. No bullet points. Pure synthesis.`;
+
+async function sharpenPill(text) {
+  return callClaude(SYSTEM_SHARPEN, text);
+}
+
+async function synthPills(texts) {
+  const content = texts.map((t, i) => `[${i+1}] ${t}`).join('\n');
+  return callClaude(SYSTEM_SYNTH, content);
+}
+
+// ═══════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/\n/g,'<br>');
+}
+
+function fmt(ts) {
+  return new Date(ts).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+}
+
+function render() {
+  const feed = document.getElementById('feed');
+
+  // Remove old pills/bricks
+  feed.querySelectorAll('.pill,.brick').forEach(el => el.remove());
+
+  // Empty state
+  const rawCount = pills.filter(p => !p.isBrick).length;
+  document.getElementById('empty').style.display = pills.length === 0 ? 'flex' : 'none';
+
+  // Refresh btn visibility
+  const rBtn = document.getElementById('refreshBtn');
+  rBtn.classList.toggle('hidden', isLive || rawCount === 0);
+
+  // Render each entry
+  let num = 0;
+  pills.forEach(pill => {
+    const el = document.createElement('div');
+
+    if (pill.isBrick) {
+      el.className = 'brick';
+      const content = pill.loading
+        ? `<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`
+        : `<div class="brick-body">${esc(pill.text)}</div>`;
+      const brickId = pill.id;
+      el.innerHTML = `
+        <div class="brick-head">
+          <span>🧱</span>
+          <span class="brick-lbl">brick · ${fmt(pill.timestamp)}</span>
+        </div>
+        ${content}
+        ${!pill.loading ? `<button class="gen-icard-btn" data-brick-id="${brickId}">📇 Generate iCard →</button>` : ''}`;
+    } else {
+      num++;
+      let aiHtml = '';
+      if (pill.loading) {
+        aiHtml = `<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+      } else if (pill.response) {
+        aiHtml = `<div class="ai-block">
+          <span class="ai-label">↳ sharpened</span>
+          <div class="ai-text">${esc(pill.response)}</div>
+        </div>`;
+      }
+      el.className = 'pill';
+      el.innerHTML = `
+        <div class="pill-meta">
+          <span class="pill-num">💊 ${String(num).padStart(2,'0')}</span>
+          <span class="pill-time">${fmt(pill.timestamp)}</span>
+        </div>
+        <div class="pill-body">${esc(pill.text)}</div>
+        ${aiHtml}`;
+    }
+
+    feed.appendChild(el);
+  });
+
+  // Scroll to bottom
+  setTimeout(() => { feed.scrollTop = feed.scrollHeight; }, 40);
+}
+
+function updateModeUI() {
+  const track = document.getElementById('track');
+  const lblL  = document.getElementById('lblLive');
+  const lblS  = document.getElementById('lblSilent');
+  track.classList.toggle('live', isLive);
+  lblL.classList.toggle('on', isLive);
+  lblS.classList.toggle('on', !isLive);
+}
+
+// ═══════════════════════════════════════════════════
+//  DROP A PILL
+// ═══════════════════════════════════════════════════
+async function dropPill() {
+  const ta   = document.getElementById('pillInput');
+  const text = ta.value.trim();
+  if (!text || isBusy) return;
+
+  const pill = {
+    id: Date.now(),
+    text,
+    response: null,
+    loading: false,
+    isBrick: false,
+    timestamp: Date.now()
+  };
+
+  pills.push(pill);
+  ta.value = '';
+  ta.style.height = 'auto';
+  save();
+  render();
+
+  if (isLive) {
+    pill.loading = true;
+    isBusy = true;
+    document.getElementById('dropBtn').disabled = true;
+    render();
+
+    try {
+      pill.response = await sharpenPill(text);
+    } catch(e) {
+      pill.response = '(sharpening failed — drop another)';
+    }
+
+    pill.loading = false;
+    isBusy = false;
+    document.getElementById('dropBtn').disabled = false;
+    save();
+    render();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  REFRESH (SYNTHESISE INTO BRICK)
+// ═══════════════════════════════════════════════════
+async function doRefresh() {
+  const rawPills = pills.filter(p => !p.isBrick);
+  if (rawPills.length === 0 || isBusy) return;
+
+  isBusy = true;
+  document.getElementById('refreshBtn').disabled = true;
+
+  const brick = {
+    id: Date.now(),
+    isBrick: true,
+    loading: true,
+    text: '',
+    timestamp: Date.now()
+  };
+  pills.push(brick);
+  render();
+
+  try {
+    brick.text = await synthPills(rawPills.map(p => p.text));
+  } catch(e) {
+    brick.text = '(synthesis failed — try again)';
+  }
+
+  brick.loading = false;
+  isBusy = false;
+  document.getElementById('refreshBtn').disabled = false;
+  save();
+  render();
+}
+
+// ═══════════════════════════════════════════════════
+//  EXPORT
+// ═══════════════════════════════════════════════════
+function doExport() {
+  if (pills.length === 0) return;
+
+  const lines = [
+    'iThoughts Export',
+    `Exported: ${new Date().toLocaleString()}`,
+    '════════════════════════════════════',
+    ''
+  ];
+
+  let n = 0;
+  pills.forEach(p => {
+    if (p.isBrick) {
+      lines.push('── BRICK ────────────────────────────');
+      lines.push(p.text);
+      lines.push('');
+    } else {
+      n++;
+      lines.push(`[${n}] ${p.text}`);
+      if (p.response) lines.push(`    ↳ ${p.response}`);
+      lines.push('');
+    }
+  });
+
+  lines.push('════════════════════════════════════');
+  lines.push('PROMPT — paste this stack into your AI:');
+  lines.push('');
+  lines.push('Here are my raw thoughts. Please synthesise them into clear insights,');
+  lines.push('identify patterns, surface the most important idea, and tell me what');
+  lines.push('to focus on next.');
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `ithoughts-${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════
+//  CLEAR
+// ═══════════════════════════════════════════════════
+function doClear() {
+  if (pills.length === 0) return;
+  if (!confirm('Clear all pills and bricks?')) return;
+  pills = [];
+  save();
+  render();
+}
+
+// ═══════════════════════════════════════════════════
+//  EVENTS
+// ═══════════════════════════════════════════════════
+document.getElementById('dropBtn').addEventListener('click', dropPill);
+
+document.getElementById('pillInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); dropPill(); }
+});
+
+document.getElementById('pillInput').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 110) + 'px';
+});
+
+document.getElementById('modeWrap').addEventListener('click', () => {
+  isLive = !isLive;
+  updateModeUI();
+  save();
+  render();
+});
+
+document.getElementById('refreshBtn').addEventListener('click', doRefresh);
+document.getElementById('exportBtn').addEventListener('click', doExport);
+document.getElementById('clearBtn').addEventListener('click', doClear);
+
+
+// ═══════════════════════════════════════════════════
+//  ICARD GENERATION
+// ═══════════════════════════════════════════════════
+let icardCurrent = 0;
+let icardData    = [];
+
+const ICARD_PROMPT = `You are an iTabs card generator. Convert the following insight into a swipeable card deck of 4-5 cards.
+Return ONLY a valid JSON array. No preamble, no markdown, no backticks. Just the raw JSON array.
+Each card object must have these exact fields:
+- tag: string like "01 / LABEL" (uppercase)
+- tagClass: one of "" | "it-purple" | "it-cyan" | "it-amber" | "it-green"
+- headline: string with ONE word wrapped in <em> tags
+- heroClass: one of "ih-default" | "ih-purple" | "ih-cyan" | "ih-amber" | "ih-green"
+- summary: 2-3 sentence plain language explanation
+- iButtons: array of 1-2 objects each with: label (short string), type (string), term (string), content (2-3 sentence explanation)
+
+The insight to convert:`;
+
+async function generateICard(brickText, btn) {
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+
+  try {
+    const prompt = ICARD_PROMPT + ' ' + cleanText(brickText);
+    const res = await fetch('https://hook.eu2.make.com/0yjcgduomfg8wotc7v2qi2rycmao7brt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+    if (!res.ok) throw new Error('API ' + res.status);
+    const data = await res.json();
+    const text = data.content[0].text;
+
+    // Parse JSON — strip any accidental backticks
+    const clean = text.replace(/```json|```/g, '').trim();
+    const cards = JSON.parse(clean);
+    openICard(cards);
+
+    btn.disabled = false;
+    btn.textContent = '📇 Generate iCard →';
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '📇 Generate iCard →';
+    alert('Could not generate iCard — try again');
+  }
+}
+
+function openICard(cards) {
+  icardData    = cards;
+  icardCurrent = 0;
+  buildICards();
+  document.getElementById('icardOverlay').classList.add('open');
+}
+
+function buildICards() {
+  const wrapper  = document.getElementById('icardCards');
+  const progress = document.getElementById('icardProgress');
+  wrapper.innerHTML  = '';
+  progress.innerHTML = '';
+
+  icardData.forEach((c, i) => {
+    const seg = document.createElement('div');
+    seg.className = 'icard-seg' + (i === 0 ? ' active' : '');
+    seg.id = 'iseg' + i;
+    progress.appendChild(seg);
+
+    const card = document.createElement('div');
+    card.className = 'icard-card' + (i === 0 ? ' active' : '');
+    card.id = 'ic' + i;
+
+    const btns = (c.iButtons || []).map(b =>
+      `<button class="icard-ibtn" data-type="${escAttrI(b.type)}" data-term="${escAttrI(b.term)}" data-content="${escAttrI(b.content)}">
+        <span class="ico">i</span>${escHtmlI(b.label)}
+      </button>`).join('');
+
+    card.innerHTML = `
+      <div class="icard-hero ${c.heroClass || 'ih-default'}">
+        <div class="icard-tag ${c.tagClass || ''}">${c.tag || ''}</div>
+        <div class="icard-headline">${c.headline || ''}</div>
+      </div>
+      <div class="icard-body">
+        <div class="icard-summary">${escHtmlI(c.summary || '')}</div>
+        <div class="icard-ibtns">${btns}</div>
+      </div>`;
+
+    wrapper.appendChild(card);
+  });
+
+  updateINav();
+
+  // i-button delegation
+  wrapper.addEventListener('click', function handler(e) {
+    const btn = e.target.closest('.icard-ibtn');
+    if (btn) openIModal(btn.dataset.type, btn.dataset.term, btn.dataset.content);
+  });
+}
+
+function navigateICard(dir) {
+  const prev = icardCurrent;
+  icardCurrent = Math.max(0, Math.min(icardData.length - 1, icardCurrent + dir));
+  if (icardCurrent === prev) return;
+  document.getElementById('ic' + prev).className = 'icard-card' + (dir > 0 ? ' prev' : '');
+  document.getElementById('ic' + icardCurrent).className = 'icard-card active';
+  document.getElementById('iseg' + prev).className = 'icard-seg viewed';
+  document.getElementById('iseg' + icardCurrent).className = 'icard-seg active';
+  updateINav();
+}
+
+function updateINav() {
+  document.getElementById('icardPrev').disabled = icardCurrent === 0;
+  document.getElementById('icardNext').disabled = icardCurrent === icardData.length - 1;
+  document.getElementById('icardCtr').textContent = `${icardCurrent + 1} / ${icardData.length}`;
+}
+
+function openIModal(type, term, content) {
+  document.getElementById('icardModalType').textContent = type || '';
+  document.getElementById('icardModalTerm').textContent = term || '';
+  document.getElementById('icardModalText').textContent = content || '';
+  document.getElementById('icardModal').classList.add('open');
+}
+function closeIModal() { document.getElementById('icardModal').classList.remove('open'); }
+
+function escHtmlI(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttrI(s) { return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// Wire up Generate iCard buttons via delegation
+document.getElementById('feed').addEventListener('click', function(e) {
+  const btn = e.target.closest('.gen-icard-btn');
+  if (!btn) return;
+  const brickId = parseInt(btn.dataset.brickId);
+  const pill = pills.find(p => p.id === brickId);
+  if (pill && pill.text) generateICard(pill.text, btn);
+});
+
+// iCard nav buttons
+document.getElementById('icardPrev').addEventListener('click', () => navigateICard(-1));
+document.getElementById('icardNext').addEventListener('click', () => navigateICard(1));
+document.getElementById('icardClose').addEventListener('click', () => {
+  document.getElementById('icardOverlay').classList.remove('open');
+});
+
+// Swipe on iCard
+let iStartX = 0;
+document.getElementById('icardCards').addEventListener('touchstart', e => iStartX = e.touches[0].clientX);
+document.getElementById('icardCards').addEventListener('touchend', e => {
+  const diff = iStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) navigateICard(diff > 0 ? 1 : -1);
+});
+
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+load();
+updateModeUI();
+render();
+</script>
+
+
+<!-- ICARD OVERLAY -->
+<div class="icard-overlay" id="icardOverlay">
+  <button class="icard-close" id="icardClose">✕</button>
+  <div class="icard-progress" id="icardProgress"></div>
+  <div class="icard-cards" id="icardCards"></div>
+  <div class="icard-nav">
+    <button class="icard-nbtn" id="icardPrev">← Prev</button>
+    <span class="icard-ctr" id="icardCtr">1 / 1</span>
+    <button class="icard-nbtn" id="icardNext">Next →</button>
+  </div>
+</div>
+
+<!-- ICARD MODAL -->
+<div class="icard-modal-overlay" id="icardModal" onclick="closeIModal()">
+  <div class="icard-modal-sheet" onclick="event.stopPropagation()">
+    <div class="icard-modal-handle"></div>
+    <div class="icard-modal-type" id="icardModalType"></div>
+    <div class="icard-modal-term" id="icardModalTerm"></div>
+    <div class="icard-modal-text" id="icardModalText"></div>
+    <button class="icard-modal-close" onclick="closeIModal()">Close</button>
+  </div>
+</div>
+
+</body>
+</html>
