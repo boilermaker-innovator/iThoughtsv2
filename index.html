@@ -426,14 +426,13 @@ function load() {
 //  CLAUDE API
 // ═══════════════════════════════════════════════════
 async function callClaude(system, userMsg) {
-  const res = await fetch('https://hook.eu2.make.com/vjk9xakasvj6buvmrx8beaeukvwfqd54', {
+  const res = await fetch('https://hook.eu2.make.com/0yjcgduomfg8wotc7v2qi2rycmao7brt', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1000,
-      system,
-      messages: [{ role: 'user', content: userMsg }]
+      messages: [{ role: 'user', content: system + '\n\n' + userMsg }]
     })
   });
   if (!res.ok) throw new Error('API ' + res.status);
